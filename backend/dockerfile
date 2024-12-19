@@ -48,6 +48,14 @@ RUN mkdir -p runtime/cache runtime/logs web/assets \
 
 # Configure Git to trust the project directory
 RUN git config --global --add safe.directory /var/www/html
+RUN echo '<IfModule mod_headers.c>\n\
+    Header set Access-Control-Allow-Origin "*"\n\
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"\n\
+    Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"\n\
+    Header set Access-Control-Allow-Credentials "true"\n\
+</IfModule>' > /etc/apache2/conf-available/cors.conf \
+    && a2enconf cors \
+    && a2enmod headers
 
 # Update Apache configuration to point to /web directory
 RUN sed -i 's!/var/www/html!/var/www/html/web!g' /etc/apache2/sites-available/000-default.conf
