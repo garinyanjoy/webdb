@@ -1,0 +1,58 @@
+FROM php:7.4-apache
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip \
+    libzip-dev
+
+# Install PHP extensions
+RUN docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip
+
+# Enable Apache modules
+RUN a2enmod rewrite
+
+# Install Composer directly
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Configure Composer to use Aliyun mirror
+RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy the entire project first
+COPY . .
+
+# Install dependencies
+RUN composer install --no-interaction
+
+# Create runtime directory and set permissions
+RUN mkdir -p runtime/cache runtime/logs web/assets \
+    && chown -R www-data:www-data /var/www/html \
+    && find /var/www/html -type d -exec chmod 755 {} \; \
+    && find /var/www/html -type f -exec chmod 644 {} \; \
+    && chmod -R 777 runtime web/assets
+
+# Configure Git to trust the project directory
+RUN git config --global --add safe.directory /var/www/html
+
+# Update Apache configuration to point to /web directory
+RUN sed -i 's!/var/www/html!/var/www/html/web!g' /etc/apache2/sites-available/000-default.conf
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]
+
