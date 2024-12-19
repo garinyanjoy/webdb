@@ -1,0 +1,15 @@
+FROM node:16-alpine
+
+WORKDIR /app
+
+# 只复制 package 文件
+COPY package*.json ./
+
+# 安装依赖
+RUN npm install
+
+# 不需要复制源代码，因为会通过 volume 映射
+# COPY . .
+
+# 运行开发服务器
+CMD ["npm", "run", "serve"]

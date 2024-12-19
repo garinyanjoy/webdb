@@ -1,23 +1,32 @@
 version: '3.8'
 
 services:
-  frontend:
+  frontend-dev:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: vue-frontend
+      dockerfile: dockerfile.dev
+    container_name: vue-frontend-dev
     ports:
-      - "8080:80"
+      - "8080:8080"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - NODE_ENV=development
     networks:
       - app-network
     depends_on:
-      - backend
+      - backend-dev
 
-  backend:
+  backend-dev:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    container_name: yii-backend
+      dockerfile: dockerfile.dev
+    container_name: yii-backend-dev
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/vendor:/var/www/html/vendor
     ports:
       - "8000:80"
     networks:
